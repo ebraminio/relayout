@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Solid blue rounded square -->
+  <rect x="16" y="16" width="224" height="224" rx="56" ry="56" fill="#2563EB"/>
+
+  <!-- Top arrow, pointing right -->
+  <polygon fill="#FFFFFF"
+           points="46,83 170,83 170,71 210,95 170,119 170,107 46,107"/>
+
+  <!-- Bottom arrow, pointing left -->
+  <polygon fill="#FFFFFF"
+           points="210,149 86,149 86,137 46,161 86,185 86,173 210,173"/>
+</svg>
