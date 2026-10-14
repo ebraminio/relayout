@@ -47,17 +47,17 @@ struct LibraryLoader
     template <typename T>
     T proc(const char *name) const
     {
-        return reinterpret_cast<T>(GetProcAddress(module, name));
+        return reinterpret_cast<T>(reinterpret_cast<void *>(GetProcAddress(module, name)));
     }
 };
 
 static void enable_hidpi()
 {
     LibraryLoader user32(L"user32.dll");
-    if (auto fn = user32.proc<BOOL(WINAPI *)(DPI_AWARENESS_CONTEXT)>("SetProcessDpiAwarenessContext"))
-        fn(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-    else if (auto fn = user32.proc<BOOL(WINAPI *)()>("SetProcessDPIAware"))
-        fn();
+    if (auto pSetProcessDpiAwarenessContext = user32.proc<BOOL(WINAPI *)(DPI_AWARENESS_CONTEXT)>("SetProcessDpiAwarenessContext"))
+        pSetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+    else if (auto pSetProcessDPIAware = user32.proc<BOOL(WINAPI *)()>("SetProcessDPIAware"))
+        pSetProcessDPIAware();
 }
 
 static void enable_dark_mode_support()
@@ -65,22 +65,35 @@ static void enable_dark_mode_support()
     DWORD build = 0;
     {
         LibraryLoader ntdll(L"ntdll.dll");
-        if (auto fn = ntdll.proc<LONG(WINAPI *)(OSVERSIONINFOW *)>("RtlGetVersion")) {
+        if (auto pRtlGetVersion = ntdll.proc<LONG(WINAPI *)(OSVERSIONINFOW *)>("RtlGetVersion")) {
             OSVERSIONINFOW osvi;
             SecureZeroMemory(&osvi, sizeof(osvi));
             osvi.dwOSVersionInfoSize = sizeof(osvi);
-            if (fn(&osvi) == 0) build = osvi.dwBuildNumber;
+            if (pRtlGetVersion(&osvi) == 0) build = osvi.dwBuildNumber;
         }
     }
-    if (build < 17763) return;
-
+    if (build < 17763)
+        return;
     LibraryLoader uxtheme(L"uxtheme.dll");
-    if (build < 18362) {
-        if (auto fn = uxtheme.proc<BOOL(WINAPI *)(BOOL)>(MAKEINTRESOURCEA(135)))
-            fn(TRUE);
-    } else {
-        if (auto fn = uxtheme.proc<int(WINAPI *)(int)>(MAKEINTRESOURCEA(135)))
-            fn(1);
+    if (build < 18362)
+    {
+        if (auto pAllowDarkModeForApp = uxtheme.proc<bool(WINAPI *)(bool allow)>(
+                MAKEINTRESOURCEA(135))) // undocumented AllowDarkModeForApp
+            pAllowDarkModeForApp(true);
+    }
+    else
+    {
+        enum class PreferredAppMode : INT
+        {
+            Default,
+            AllowDark,
+            ForceDark,
+            ForceLight,
+            Max
+        };
+        if (auto pSetPreferredAppMode = uxtheme.proc<INT(WINAPI *)(PreferredAppMode value)>(
+                MAKEINTRESOURCEA(135))) // undocumented SetPreferredAppMode
+            pSetPreferredAppMode(PreferredAppMode::AllowDark);
     }
 }
 
@@ -232,6 +245,14 @@ struct app_state_t
     app_state_t(const app_state_t &)            = delete;
     app_state_t &operator=(const app_state_t &) = delete;
 
+    static LRESULT CALLBACK TrayProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+    {
+        auto *state = reinterpret_cast<app_state_t *>(
+            GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+        if (state) return state->handle_message(hwnd, msg, wParam, lParam);
+        return DefWindowProcW(hwnd, msg, wParam, lParam);
+    }
+
     HKL foreground_layout() const
     {
         HWND fg = GetForegroundWindow();
@@ -244,6 +265,27 @@ struct app_state_t
         return h ? h : GetKeyboardLayout(0);
     }
 
+    void add_tray_icon()
+    {
+        if (!app_icon)
+            app_icon = (HICON)LoadImageW(hInst,
+                                         MAKEINTRESOURCEW(IDI_APP_ICON),
+                                         IMAGE_ICON,
+                                         GetSystemMetrics(SM_CXSMICON),
+                                         GetSystemMetrics(SM_CYSMICON),
+                                         0);
+        nid->cbSize           = sizeof(*nid);
+        nid->hWnd             = hwnd;
+        nid->uID              = 1;
+        nid->uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+        nid->uCallbackMessage = WM_TRAY;
+        nid->hIcon            = app_icon ? app_icon
+                                         : LoadIconW(NULL, IDI_INFORMATION);
+        wsprintfW(nid->szTip, L"%s - right-click for options", APP_TITLE);
+        Shell_NotifyIconW(NIM_ADD, nid);
+    }
+
+private:
     void poll()
     {
         HKL h = foreground_layout();
@@ -306,32 +348,12 @@ struct app_state_t
         transform_selection(from, cur);
     }
 
-    void add_tray_icon()
-    {
-        if (!app_icon)
-            app_icon = (HICON)LoadImageW(hInst,
-                                         MAKEINTRESOURCEW(IDI_APP_ICON),
-                                         IMAGE_ICON,
-                                         GetSystemMetrics(SM_CXSMICON),
-                                         GetSystemMetrics(SM_CYSMICON),
-                                         0);
-        nid->cbSize           = sizeof(*nid);
-        nid->hWnd             = hwnd;
-        nid->uID              = 1;
-        nid->uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP;
-        nid->uCallbackMessage = WM_TRAY;
-        nid->hIcon            = app_icon ? app_icon
-                                         : LoadIconW(NULL, IDI_INFORMATION);
-        wsprintfW(nid->szTip, L"%s - right-click for options", APP_TITLE);
-        Shell_NotifyIconW(NIM_ADD, nid);
-    }
-
     void show_tray_menu()
     {
         HMENU menu = CreatePopupMenu();
         POINT p;
 
-        AppendMenuW(menu, MF_STRING | (auto_transform ? MF_CHECKED : 0),
+        AppendMenuW(menu, static_cast<UINT>(MF_STRING) | (auto_transform ? MF_CHECKED : 0),
                     MENU_AUTO, L"Transform on layout switch");
         AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
         AppendMenuW(menu, MF_STRING, MENU_NOW, L"Transform selection now");
@@ -391,16 +413,6 @@ struct app_state_t
     }
 };
 
-/* ---------------- window proc ---------------- */
-
-static LRESULT CALLBACK TrayProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    auto *state = reinterpret_cast<app_state_t *>(
-        GetWindowLongPtrW(hwnd, GWLP_USERDATA));
-    if (state) return state->handle_message(hwnd, msg, wParam, lParam);
-    return DefWindowProcW(hwnd, msg, wParam, lParam);
-}
-
 /* ---------------- entry point ---------------- */
 
 extern "C" [[noreturn]] void start();
@@ -431,7 +443,7 @@ void start()
     WNDCLASSEXW wc;
     SecureZeroMemory(&wc, sizeof(wc));
     wc.cbSize        = sizeof(wc);
-    wc.lpfnWndProc   = TrayProc;
+    wc.lpfnWndProc   = app_state_t::TrayProc;
     wc.hInstance     = hInst;
     wc.lpszClassName = APP_ID;
     wc.hCursor       = LoadCursorW(NULL, IDC_ARROW);
