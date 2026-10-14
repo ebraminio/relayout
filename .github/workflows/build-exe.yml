@@ -48,8 +48,7 @@ jobs:
           gh release create $tag `
               --title $tag `
               --notes "Automated build of commit $sha" `
-              --target $sha `
-              --prerelease
+              --target $sha
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
           gh release upload $tag relayout.exe --clobber

@@ -321,7 +321,8 @@ struct app_state_t
         nid->uID              = 1;
         nid->uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP;
         nid->uCallbackMessage = WM_TRAY;
-        nid->hIcon            = LoadIconW(NULL, IDI_INFORMATION);
+        nid->hIcon            = app_icon ? app_icon
+                                         : LoadIconW(NULL, IDI_INFORMATION);
         wsprintfW(nid->szTip, L"%s - right-click for options", APP_TITLE);
         Shell_NotifyIconW(NIM_ADD, nid);
     }
