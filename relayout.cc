@@ -34,31 +34,30 @@ static constexpr UINT POLL_MS = 100;
 struct LibraryLoader
 {
 private:
-    HMODULE module_;
+    HMODULE module;
 
 public:
     LibraryLoader(const LibraryLoader &)            = delete;
     LibraryLoader &operator=(const LibraryLoader &) = delete;
 
-    LibraryLoader(LPCWSTR name)
+    LibraryLoader(LPCWSTR name) : module(GetModuleHandleW(name))
     {
-        module_ = GetModuleHandleW(name);
-        if (!module_) module_ = LoadLibraryW(name);
+        if (!module) module = LoadLibraryW(name);
     }
 
     template <typename T>
-    T proc(const char *name) const
+    T getProcedure(const char *name) const
     {
-        return reinterpret_cast<T>(reinterpret_cast<void *>(GetProcAddress(module_, name)));
+        return reinterpret_cast<T>(reinterpret_cast<void *>(GetProcAddress(module, name)));
     }
 };
 
 static void enable_hidpi()
 {
     LibraryLoader user32(L"user32.dll");
-    if (auto pSetProcessDpiAwarenessContext = user32.proc<BOOL(WINAPI *)(DPI_AWARENESS_CONTEXT)>("SetProcessDpiAwarenessContext"))
+    if (auto pSetProcessDpiAwarenessContext = user32.getProcedure<BOOL(WINAPI *)(DPI_AWARENESS_CONTEXT)>("SetProcessDpiAwarenessContext"))
         pSetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-    else if (auto pSetProcessDPIAware = user32.proc<BOOL(WINAPI *)()>("SetProcessDPIAware"))
+    else if (auto pSetProcessDPIAware = user32.getProcedure<BOOL(WINAPI *)()>("SetProcessDPIAware"))
         pSetProcessDPIAware();
 }
 
@@ -67,7 +66,7 @@ static void enable_dark_mode_support()
     DWORD build = 0;
     {
         LibraryLoader ntdll(L"ntdll.dll");
-        if (auto pRtlGetVersion = ntdll.proc<LONG(WINAPI *)(OSVERSIONINFOW *)>("RtlGetVersion")) {
+        if (auto pRtlGetVersion = ntdll.getProcedure<LONG(WINAPI *)(OSVERSIONINFOW *)>("RtlGetVersion")) {
             OSVERSIONINFOW osvi;
             SecureZeroMemory(&osvi, sizeof(osvi));
             osvi.dwOSVersionInfoSize = sizeof(osvi);
@@ -79,7 +78,7 @@ static void enable_dark_mode_support()
     LibraryLoader uxtheme(L"uxtheme.dll");
     if (build < 18362)
     {
-        if (auto pAllowDarkModeForApp = uxtheme.proc<bool(WINAPI *)(bool allow)>(
+        if (auto pAllowDarkModeForApp = uxtheme.getProcedure<bool(WINAPI *)(bool allow)>(
                 MAKEINTRESOURCEA(135))) // undocumented AllowDarkModeForApp
             pAllowDarkModeForApp(true);
     }
@@ -93,7 +92,7 @@ static void enable_dark_mode_support()
             ForceLight,
             Max
         };
-        if (auto pSetPreferredAppMode = uxtheme.proc<INT(WINAPI *)(PreferredAppMode value)>(
+        if (auto pSetPreferredAppMode = uxtheme.getProcedure<INT(WINAPI *)(PreferredAppMode value)>(
                 MAKEINTRESOURCEA(135))) // undocumented SetPreferredAppMode
             pSetPreferredAppMode(PreferredAppMode::AllowDark);
     }
