@@ -46,7 +46,7 @@ jobs:
           }
 
           gh release create $tag `
-              --title $tag `
+              --title $sha `
               --notes "Automated build of commit $sha" `
               --target $sha
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
