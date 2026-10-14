@@ -213,6 +213,7 @@ static HKL find_other_layout(HKL current)
 struct app_state_t
 {
     HWND            hwnd;
+    HINSTANCE       hInst;
     HKL             last_layout;
     HKL             prev_layout;
     BOOL            auto_transform = true;
@@ -222,10 +223,12 @@ struct app_state_t
     IUIAutomation   *automation;
     HICON           app_icon;
 
-    app_state_t(NOTIFYICONDATAW *nid_)
-        : hwnd(NULL), last_layout(NULL), prev_layout(NULL),
+    app_state_t(NOTIFYICONDATAW *nid_, HINSTANCE hInst_)
+        : hwnd(NULL), hInst(hInst_),
+          last_layout(NULL), prev_layout(NULL),
           auto_transform(true), wm_taskbar_created(0),
-          wm_show_menu(0), nid(nid_), automation(NULL) {}
+          wm_show_menu(0), nid(nid_), automation(NULL),
+          app_icon(NULL) {}
 
     app_state_t(const app_state_t &)            = delete;
     app_state_t &operator=(const app_state_t &) = delete;
@@ -434,7 +437,7 @@ void start()
 
     HINSTANCE hInst = GetModuleHandleW(NULL);
 
-        WNDCLASSEXW wc;
+    WNDCLASSEXW wc;
     SecureZeroMemory(&wc, sizeof(wc));
     wc.cbSize        = sizeof(wc);
     wc.lpfnWndProc   = TrayProc;
