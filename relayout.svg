@@ -1,12 +1,48 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
-  <!-- Solid blue rounded square -->
-  <rect x="16" y="16" width="224" height="224" rx="56" ry="56" fill="#2563EB"/>
+<svg version="1.1" viewBox="0 0 13.13 13.13" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+  <style>.st0 {
+        fill: url(#c);
+      }
 
-  <!-- Top arrow, pointing right -->
-  <polygon fill="#FFFFFF"
-           points="46,83 170,83 170,71 210,95 170,119 170,107 46,107"/>
+      .st1 {
+        mask: url(#a);
+      }
 
-  <!-- Bottom arrow, pointing left -->
-  <polygon fill="#FFFFFF"
-           points="210,149 86,149 86,137 46,161 86,185 86,173 210,173"/>
+      .st2 {
+        fill: url(#linear-gradient1);
+      }
+
+      .st3 {
+        fill: url(#b);
+      }
+
+      .st4 {
+        fill: #d3f9ff;
+      }
+
+      .st5 {
+        fill: url(#d);
+      }</style>
+  <linearGradient id="d" x1="7.75" x2="9.48" y1="11.04" y2="2.01" gradientTransform="translate(0 15.12) scale(1 -1)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#0078d4" offset="0"/>
+   <stop stop-color="#0669bc" offset="1"/>
+  </linearGradient>
+  <mask id="a" x=".82" y=".82" width="12.31" height="12.31" maskUnits="userSpaceOnUse">
+   <rect class="st2" x="4.1" y="4.1" width="9.03" height="9.03" rx=".65" ry=".65"/>
+  </mask>
+  <radialGradient id="b" cx="-772.13" cy="598.59" r="1" gradientTransform="translate(719.47 5646.1) rotate(45) scale(5.8198 -5.8198)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#0c59a4" offset=".75"/>
+   <stop stop-color="#0c59a4" stop-opacity="0" offset="1"/>
+  </radialGradient>
+  <linearGradient id="c" x1="3.64" x2="5.38" y1="15.14" y2="6.11" gradientTransform="translate(0 15.12) scale(1 -1)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#3ccbf4" offset="0"/>
+   <stop stop-color="#28afea" offset="1"/>
+  </linearGradient>
+ </defs>
+ <rect class="st5" x="4.1" y="4.1" width="9.03" height="9.03" rx=".64" ry=".64"/>
+ <g class="st1" mask="url(#a)">
+  <rect class="st3" x=".82" y=".82" width="9.03" height="9.03" rx=".65" ry=".65"/>
+ </g>
+ <rect class="st0" width="9.03" height="9.03" rx=".68" ry=".68"/>
+ <path class="st4" d="M3.8,6.01c-.03-.07-.05-.17-.07-.29-.02-.12-.03-.23-.03-.35,0-.18.04-.34.11-.48.07-.15.16-.28.27-.41.11-.13.22-.25.35-.37.13-.12.24-.23.35-.34.11-.11.2-.23.27-.35.07-.12.11-.26.11-.41,0-.13-.03-.25-.08-.34-.05-.1-.13-.18-.22-.25-.09-.07-.2-.12-.32-.15-.12-.03-.24-.05-.38-.05-.44,0-.86.2-1.25.59v-1.02c.48-.28.98-.42,1.5-.42.24,0,.46.03.67.09.21.06.4.15.56.27.16.12.28.27.37.45.09.18.14.39.14.63s-.04.43-.11.6c-.08.18-.17.34-.29.49-.11.15-.24.28-.37.39-.13.11-.26.23-.37.34-.11.11-.21.23-.29.36-.08.12-.11.26-.11.41,0,.13.02.24.05.34.03.1.06.19.1.26h-.93ZM4.3,7.88c-.17,0-.32-.06-.45-.17-.12-.11-.19-.25-.19-.41s.06-.31.19-.41c.13-.12.27-.18.45-.18s.31.06.44.18c.12.11.19.25.19.41s-.06.3-.19.41c-.13.11-.28.17-.44.17Z"/>
 </svg>
