@@ -22,14 +22,6 @@ jobs:
         shell: cmd
         run: build.bat
 
-      - name: Upload artifact (PRs)
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          name: relayout-pr-${{ github.event.pull_request.number }}
-          path: relayout.exe
-          if-no-files-found: error
-
       - name: Publish release
         if: github.event_name != 'pull_request'
         shell: pwsh
@@ -52,5 +44,5 @@ jobs:
               --target $sha
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-          gh release upload $tag relayout.exe --clobber
+          gh release upload $tag Relayout.exe --clobber
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
