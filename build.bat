@@ -10,7 +10,7 @@ rc /nologo relayout.rc || exit /b 1
 cl relayout.cc relayout.res /FeRelayout.exe ^
     /utf-8 /O1 /GS- /Zl /Gy /EHsc- /GR- ^
     /std:c++latest /permissive- /Wall /WX ^
-    /wd4710 /wd4711 /wd5045 ^
+    /wd4710 /wd4711 /wd5045 /analyze /Zc:__cplusplus /Zc:preprocessor ^
     /external:anglebrackets /external:W0 ^
     /link /NODEFAULTLIB /SUBSYSTEM:WINDOWS /ENTRY:start /INCREMENTAL:NO ^
     /OPT:REF /OPT:ICF /FIXED /MERGE:.rdata=.text /ignore:4254 ^

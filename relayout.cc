@@ -436,7 +436,8 @@ void start()
 
     /* COM must be initialized on the thread that calls UI Automation,
        and that has to be the same thread that pumps the message loop. */
-    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED)))
+        ExitProcess(1);
 
     HINSTANCE hInst = GetModuleHandleW(NULL);
 
