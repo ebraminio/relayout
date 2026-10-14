@@ -68,8 +68,8 @@ static void enable_dark_mode_support()
         LibraryLoader ntdll(L"ntdll.dll");
         if (auto pRtlGetVersion = ntdll.getProcedure<LONG(WINAPI *)(OSVERSIONINFOW *)>("RtlGetVersion")) {
             OSVERSIONINFOW osvi;
-            SecureZeroMemory(&osvi, sizeof(osvi));
-            osvi.dwOSVersionInfoSize = sizeof(osvi);
+            SecureZeroMemory(&osvi, sizeof osvi);
+            osvi.dwOSVersionInfoSize = sizeof osvi;
             if (pRtlGetVersion(&osvi) == 0) build = osvi.dwBuildNumber;
         }
     }
@@ -107,7 +107,7 @@ static void send_unicode_string(const WCHAR *s)
 {
     for (; *s; ++s) {
         INPUT in[2];
-        SecureZeroMemory(in, sizeof(in));
+        SecureZeroMemory(in, sizeof in);
         in[0].type       = INPUT_KEYBOARD;
         in[0].ki.wScan   = *s;
         in[0].ki.dwFlags = KEYEVENTF_UNICODE;
@@ -185,7 +185,7 @@ static WCHAR translate_char(WCHAR c, HKL from, HKL to)
     if (vks == -1) return c;
 
     vk = static_cast<BYTE>(vks);
-    SecureZeroMemory(keys, sizeof(keys));
+    SecureZeroMemory(keys, sizeof keys);
     if (vks & 0x0100) keys[VK_SHIFT]   = 0x80;
     if (vks & 0x0200) keys[VK_CONTROL] = 0x80;
     if (vks & 0x0400) keys[VK_MENU]    = 0x80;
@@ -205,7 +205,7 @@ static void transform_text(WCHAR *s, HKL from, HKL to)
 
     if (from == to || !from || !to) return;
 
-    SecureZeroMemory(keys, sizeof(keys));
+    SecureZeroMemory(keys, sizeof keys);
     ToUnicodeEx(VK_SPACE, 0, keys, buf, 4, 0, from);
     ToUnicodeEx(VK_SPACE, 0, keys, buf, 4, 0, to);
 
@@ -275,7 +275,7 @@ struct app_state_t
                                          GetSystemMetrics(SM_CXSMICON),
                                          GetSystemMetrics(SM_CYSMICON),
                                          0));
-        nid->cbSize           = sizeof(*nid);
+        nid->cbSize           = sizeof *nid;
         nid->hWnd             = hwnd;
         nid->uID              = 1;
         nid->uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP;
@@ -447,8 +447,8 @@ void start()
     HINSTANCE hInst = GetModuleHandleW(nullptr);
 
     WNDCLASSEXW wc;
-    SecureZeroMemory(&wc, sizeof(wc));
-    wc.cbSize        = sizeof(wc);
+    SecureZeroMemory(&wc, sizeof wc);
+    wc.cbSize        = sizeof wc;
     wc.lpfnWndProc   = app_state_t::TrayProc;
     wc.hInstance     = hInst;
     wc.lpszClassName = APP_ID;
