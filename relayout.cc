@@ -200,19 +200,11 @@ static void transform_text(WCHAR *s, HKL from, HKL to)
 
 static HKL find_other_layout(HKL current)
 {
-    int  n = GetKeyboardLayoutList(0, NULL);
-    HKL  result = current;
-    HKL *list;
-    int  i;
-
-    if (n <= 0) return current;
-    list = (HKL *)GlobalAlloc(GMEM_FIXED, (SIZE_T)n * sizeof(HKL));
-    if (!list) return current;
-    GetKeyboardLayoutList(n, list);
-    for (i = 0; i < n; ++i)
-        if (list[i] != current) { result = list[i]; break; }
-    GlobalFree(list);
-    return result;
+    HKL list[16];
+    int n = GetKeyboardLayoutList(16, list);
+    for (int i = 0; i < n; ++i)
+        if (list[i] != current) return list[i];
+    return current;
 }
 
 /* ---------------- app state ---------------- */
