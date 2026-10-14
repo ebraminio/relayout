@@ -21,9 +21,8 @@ static const CLSID kCLSID_CUIAutomation =
 static constexpr LPCWSTR APP_ID    = L"Relayout";
 static constexpr LPCWSTR APP_TITLE = L"Relayout";
 
-static constexpr UINT WM_TRAY   = WM_APP + 1;
-static constexpr UINT HOTKEY_ID = 1;
-static constexpr UINT TIMER_ID  = 1;
+static constexpr UINT WM_TRAY  = WM_APP + 1;
+static constexpr UINT TIMER_ID = 1;
 
 static constexpr UINT MENU_AUTO = 100;
 static constexpr UINT MENU_NOW  = 101;
@@ -335,8 +334,7 @@ struct app_state_t
         AppendMenuW(menu, MF_STRING | (auto_transform ? MF_CHECKED : 0),
                     MENU_AUTO, L"Transform on layout switch");
         AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
-        AppendMenuW(menu, MF_STRING, MENU_NOW,
-                    L"Transform selection now\tPause");
+        AppendMenuW(menu, MF_STRING, MENU_NOW, L"Transform selection now");
         AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
         AppendMenuW(menu, MF_STRING, MENU_EXIT, L"Exit");
 
@@ -377,17 +375,12 @@ struct app_state_t
             }
             return 0;
 
-        case WM_HOTKEY:
-            if (wParam == HOTKEY_ID) manual_transform();
-            return 0;
-
         case WM_TIMER:
             if (wParam == TIMER_ID) poll();
             return 0;
 
         case WM_DESTROY:
             KillTimer(h, TIMER_ID);
-            UnregisterHotKey(h, HOTKEY_ID);
             Shell_NotifyIconW(NIM_DELETE, nid);
             if (app_icon) { DestroyIcon(app_icon); app_icon = NULL; }
             if (automation) { automation->Release(); automation = NULL; }
@@ -425,9 +418,6 @@ void start()
         CloseHandle(instance_mutex);
         ExitProcess(0);
     }
-    /* If instance_mutex is NULL we couldn't create the guard for some
-       reason; that's not fatal, just run without single-instance
-       protection. */
 
     enable_hidpi();
     enable_dark_mode_support();
@@ -484,7 +474,6 @@ void start()
     state.add_tray_icon();
     state.last_layout = state.foreground_layout();
 
-    RegisterHotKey(state.hwnd, HOTKEY_ID, MOD_NOREPEAT, VK_PAUSE);
     SetTimer(state.hwnd, TIMER_ID, POLL_MS, NULL);
 
     MSG msg;

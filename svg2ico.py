@@ -15,7 +15,7 @@ def run(*a): subprocess.run(a, check=True)
 
 def bmp_frame(size):
     png = render(size)
-    run('pngquant', '--nofs', '32', '--speed', '1', '--output', png, '--force', png)
+    run('pngquant', '--nofs', '64', '--speed', '1', '--output', png, '--force', png)
     rgba = subprocess.check_output(['magick', png, '-depth', '8', 'rgba:-'])
     assert len(rgba) == size * size * 4, f"expected {size*size*4} bytes, got {len(rgba)}"
 
@@ -38,7 +38,7 @@ def bmp_frame(size):
 
 try:
     p256 = render(256)
-    run('pngquant', '--nofs', '32', '--speed', '1', '--output', p256, '--force', p256)
+    run('pngquant', '--nofs', '64', '--speed', '1', '--output', p256, '--force', p256)
     run('zopflipng', '-y', '--iterations=15', '--filters=01234mepb',
         '--lossy_8bit', '--lossy_transparent', p256, p256)
     with open(p256, 'rb') as f: png = f.read()
