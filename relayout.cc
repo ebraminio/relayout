@@ -8,6 +8,7 @@
 #include <shellapi.h>
 #include <objbase.h>
 #include <uiautomation.h>
+#include "relayout.rc.h"
 
 /* The SDK declares CLSID_CUIAutomation as extern; its data would come
    from a lib we skip under /NODEFAULTLIB.  Define our own copy. */
@@ -219,6 +220,7 @@ struct app_state_t
     UINT            wm_show_menu;
     NOTIFYICONDATAW *nid;
     IUIAutomation   *automation;
+    HICON           app_icon;
 
     app_state_t(NOTIFYICONDATAW *nid_)
         : hwnd(NULL), last_layout(NULL), prev_layout(NULL),
@@ -304,6 +306,13 @@ struct app_state_t
 
     void add_tray_icon()
     {
+        if (!app_icon)
+            app_icon = (HICON)LoadImageW(hInst,
+                                         MAKEINTRESOURCEW(IDI_APP_ICON),
+                                         IMAGE_ICON,
+                                         GetSystemMetrics(SM_CXSMICON),
+                                         GetSystemMetrics(SM_CYSMICON),
+                                         0);
         nid->cbSize           = sizeof(*nid);
         nid->hWnd             = hwnd;
         nid->uID              = 1;
@@ -376,6 +385,7 @@ struct app_state_t
             KillTimer(h, TIMER_ID);
             UnregisterHotKey(h, HOTKEY_ID);
             Shell_NotifyIconW(NIM_DELETE, nid);
+            if (app_icon) { DestroyIcon(app_icon); app_icon = NULL; }
             if (automation) { automation->Release(); automation = NULL; }
             PostQuitMessage(0);
             return 0;
@@ -424,20 +434,28 @@ void start()
 
     HINSTANCE hInst = GetModuleHandleW(NULL);
 
-    WNDCLASSEXW wc;
+        WNDCLASSEXW wc;
     SecureZeroMemory(&wc, sizeof(wc));
     wc.cbSize        = sizeof(wc);
     wc.lpfnWndProc   = TrayProc;
     wc.hInstance     = hInst;
     wc.lpszClassName = APP_ID;
     wc.hCursor       = LoadCursorW(NULL, IDC_ARROW);
-    wc.hIcon         = LoadIconW(NULL, IDI_INFORMATION);
-    wc.hIconSm       = wc.hIcon;
+    wc.hIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_APP_ICON),
+                                 IMAGE_ICON,
+                                 GetSystemMetrics(SM_CXICON),
+                                 GetSystemMetrics(SM_CYICON), 0);
+    if (!wc.hIcon) wc.hIcon = LoadIconW(NULL, IDI_APPLICATION);
+    wc.hIconSm = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_APP_ICON),
+                                   IMAGE_ICON,
+                                   GetSystemMetrics(SM_CXSMICON),
+                                   GetSystemMetrics(SM_CYSMICON), 0);
+    if (!wc.hIconSm) wc.hIconSm = wc.hIcon;
     if (!RegisterClassExW(&wc))
         ExitProcess(1);
 
     NOTIFYICONDATAW nid;
-    app_state_t state(&nid);
+    app_state_t state(&nid, hInst);
     state.wm_taskbar_created = RegisterWindowMessageW(L"TaskbarCreated");
     state.wm_show_menu       = RegisterWindowMessageW(L"RelayoutShowMenu");
 

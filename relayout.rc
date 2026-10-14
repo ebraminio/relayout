@@ -1,0 +1,39 @@
+#include <winresrc.h>
+#include "relayout.rc.h"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+
+IDI_APP_ICON ICON "relayout.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    0,0,0,0
+PRODUCTVERSION 0,0,0,0
+FILEFLAGSMASK  0x3fL
+#ifdef _DEBUG
+FILEFLAGS      0x1L
+#else
+FILEFLAGS      0x0L
+#endif
+FILEOS         VOS_NT_WINDOWS32
+FILETYPE       VFT_APP
+FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0" /* Language: English (US), Codepage: Unicode */
+        BEGIN
+            VALUE "CompanyName",      "Relayout"
+            VALUE "FileDescription",  "Relayout"
+            VALUE "FileVersion",      "0.0.0.0"
+            VALUE "InternalName",     "relayout.exe"
+            VALUE "LegalCopyright",   "Licensed under MIT"
+            VALUE "OriginalFilename", "Relayout"
+            VALUE "ProductName",      "Relayout"
+            VALUE "ProductVersion",   "0.0.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 0x04b0
+    END
+END
