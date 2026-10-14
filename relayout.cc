@@ -467,6 +467,7 @@ void start()
         ExitProcess(1);
 
     NOTIFYICONDATAW nid;
+    SecureZeroMemory(&nid, sizeof nid);
     app_state_t state(&nid, hInst);
     state.wm_taskbar_created = RegisterWindowMessageW(L"TaskbarCreated");
     state.wm_show_menu       = RegisterWindowMessageW(L"RelayoutShowMenu");
