@@ -1,21 +1,9 @@
 @echo off
 setlocal
 
-if not defined VSCMD_VER (
-    set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
-    if not exist "%VSWHERE%" (
-        echo vswhere.exe not found. Install Visual Studio with the C++ workload.
-        exit /b 1
-    )
-    for /f "usebackq tokens=*" %%i in (`"%VSWHERE%" -latest -products * ^
-        -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ^
-        -property installationPath`) do set "VSPATH=%%i"
-    if not defined VSPATH (
-        echo No Visual Studio installation with C++ tools found.
-        exit /b 1
-    )
-    call "%VSPATH%\VC\Auxiliary\Build\vcvars32.bat" >nul || exit /b 1
-)
+set "VCVARS=%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+if not exist "%VCVARS%" set "VCVARS=%ProgramFiles%\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars32.bat"
+call "%VCVARS%" >nul || exit /b 1
 
 rc /nologo relayout.rc || exit /b 1
 
