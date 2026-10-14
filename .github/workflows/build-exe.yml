@@ -37,7 +37,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $sha = $env:GITHUB_SHA
-          $tag = "build-$($sha.Substring(0,7))"
+          $sha7 = $sha.Substring(0,7)
+          $tag = "build-$sha7"
           Write-Host "Tag: $tag  SHA: $sha"
 
           gh release view $tag *> $null
@@ -46,7 +47,7 @@ jobs:
           }
 
           gh release create $tag `
-              --title $sha `
+              --title $sha7 `
               --notes "Automated build of commit $sha" `
               --target $sha
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
