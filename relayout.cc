@@ -1,13 +1,12 @@
 #define WIN32_LEAN_AND_MEAN
 #define UNICODE
-#define _UNICODE
 #define WINVER 0x0601
 #define _WIN32_WINNT 0x0601
 #define _WIN32_DCOM
-#include <windows.h>
+#include <Windows.h>
 #include <shellapi.h>
 #include <objbase.h>
-#include <uiautomation.h>
+#include <UIAutomation.h>
 #include "relayout.rc.h"
 
 /* The SDK declares CLSID_CUIAutomation as extern; its data would come
@@ -34,20 +33,23 @@ static constexpr UINT POLL_MS = 100;
 
 struct LibraryLoader
 {
-    HMODULE module;
+private:
+    HMODULE module_;
+
+public:
     LibraryLoader(const LibraryLoader &)            = delete;
     LibraryLoader &operator=(const LibraryLoader &) = delete;
 
     LibraryLoader(LPCWSTR name)
     {
-        module = GetModuleHandleW(name);
-        if (!module) module = LoadLibraryW(name);
+        module_ = GetModuleHandleW(name);
+        if (!module_) module_ = LoadLibraryW(name);
     }
 
     template <typename T>
     T proc(const char *name) const
     {
-        return reinterpret_cast<T>(reinterpret_cast<void *>(GetProcAddress(module, name)));
+        return reinterpret_cast<T>(reinterpret_cast<void *>(GetProcAddress(module_, name)));
     }
 };
 
@@ -119,16 +121,16 @@ static void send_unicode_string(const WCHAR *s)
 /* ---------------- UI Automation ---------------- */
 
 /* Read the current selection via TextPattern.  Returns a GlobalAlloc'd
-   wide string (caller frees with GlobalFree) or NULL if the focused
+   wide string (caller frees with GlobalFree) or nullptr if the focused
    element doesn't support TextPattern or has no selection. */
 static WCHAR *uia_read_selection(IUIAutomation *automation)
 {
-    IUIAutomationElement        *elem    = NULL;
-    IUIAutomationTextPattern    *textpat = NULL;
-    IUIAutomationTextRangeArray *ranges  = NULL;
-    IUIAutomationTextRange      *range   = NULL;
-    BSTR    sel    = NULL;
-    WCHAR  *result = NULL;
+    IUIAutomationElement        *elem    = nullptr;
+    IUIAutomationTextPattern    *textpat = nullptr;
+    IUIAutomationTextRangeArray *ranges  = nullptr;
+    IUIAutomationTextRange      *range   = nullptr;
+    BSTR    sel    = nullptr;
+    WCHAR  *result = nullptr;
     int     count  = 0;
     HRESULT hr;
     UINT    len, i;
@@ -155,7 +157,7 @@ static WCHAR *uia_read_selection(IUIAutomation *automation)
     len = SysStringLen(sel);
     if (len == 0) goto done;
 
-    result = (WCHAR *)GlobalAlloc(GMEM_FIXED, (len + 1) * sizeof(WCHAR));
+    result = reinterpret_cast<WCHAR *>(GlobalAlloc(GMEM_FIXED, (len + 1) * sizeof(WCHAR)));
     if (result)
         for (i = 0; i <= len; ++i) result[i] = sel[i];
 
@@ -183,7 +185,7 @@ static WCHAR translate_char(WCHAR c, HKL from, HKL to)
     vks = VkKeyScanExW(c, from);
     if (vks == -1) return c;
 
-    vk = (BYTE)vks;
+    vk = static_cast<BYTE>(vks);
     SecureZeroMemory(keys, sizeof(keys));
     if (vks & 0x0100) keys[VK_SHIFT]   = 0x80;
     if (vks & 0x0200) keys[VK_CONTROL] = 0x80;
@@ -236,11 +238,11 @@ struct app_state_t
     HICON           app_icon;
 
     app_state_t(NOTIFYICONDATAW *nid_, HINSTANCE hInst_)
-        : hwnd(NULL), hInst(hInst_),
-          last_layout(NULL), prev_layout(NULL),
+        : hwnd(nullptr), hInst(hInst_),
+          last_layout(nullptr), prev_layout(nullptr),
           auto_transform(true), wm_taskbar_created(0),
-          wm_show_menu(0), nid(nid_), automation(NULL),
-          app_icon(NULL) {}
+          wm_show_menu(0), nid(nid_), automation(nullptr),
+          app_icon(nullptr) {}
 
     app_state_t(const app_state_t &)            = delete;
     app_state_t &operator=(const app_state_t &) = delete;
@@ -259,7 +261,7 @@ struct app_state_t
         DWORD tid;
         HKL h;
         if (!fg) return GetKeyboardLayout(0);
-        tid = GetWindowThreadProcessId(fg, NULL);
+        tid = GetWindowThreadProcessId(fg, nullptr);
         if (!tid) return GetKeyboardLayout(0);
         h = GetKeyboardLayout(tid);
         return h ? h : GetKeyboardLayout(0);
@@ -268,19 +270,19 @@ struct app_state_t
     void add_tray_icon()
     {
         if (!app_icon)
-            app_icon = (HICON)LoadImageW(hInst,
+            app_icon = reinterpret_cast<HICON>(LoadImageW(hInst,
                                          MAKEINTRESOURCEW(IDI_APP_ICON),
                                          IMAGE_ICON,
                                          GetSystemMetrics(SM_CXSMICON),
                                          GetSystemMetrics(SM_CYSMICON),
-                                         0);
+                                         0));
         nid->cbSize           = sizeof(*nid);
         nid->hWnd             = hwnd;
         nid->uID              = 1;
         nid->uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP;
         nid->uCallbackMessage = WM_TRAY;
         nid->hIcon            = app_icon ? app_icon
-                                         : LoadIconW(NULL, IDI_INFORMATION);
+                                         : LoadIconW(nullptr, IDI_INFORMATION);
         wsprintfW(nid->szTip, L"%s - right-click for options", APP_TITLE);
         Shell_NotifyIconW(NIM_ADD, nid);
     }
@@ -355,14 +357,14 @@ private:
 
         AppendMenuW(menu, static_cast<UINT>(MF_STRING) | (auto_transform ? MF_CHECKED : 0),
                     MENU_AUTO, L"Transform on layout switch");
-        AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
+        AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
         AppendMenuW(menu, MF_STRING, MENU_NOW, L"Transform selection now");
-        AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
+        AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
         AppendMenuW(menu, MF_STRING, MENU_EXIT, L"Exit");
 
         GetCursorPos(&p);
         SetForegroundWindow(hwnd);
-        TrackPopupMenu(menu, TPM_RIGHTBUTTON, p.x, p.y, 0, hwnd, NULL);
+        TrackPopupMenu(menu, TPM_RIGHTBUTTON, p.x, p.y, 0, hwnd, nullptr);
         PostMessageW(hwnd, WM_NULL, 0, 0);
         DestroyMenu(menu);
     }
@@ -394,6 +396,7 @@ private:
             case MENU_AUTO: auto_transform = !auto_transform; return 0;
             case MENU_NOW:  manual_transform();               return 0;
             case MENU_EXIT: DestroyWindow(h);                 return 0;
+            default: break;
             }
             return 0;
 
@@ -404,10 +407,13 @@ private:
         case WM_DESTROY:
             KillTimer(h, TIMER_ID);
             Shell_NotifyIconW(NIM_DELETE, nid);
-            if (app_icon) { DestroyIcon(app_icon); app_icon = NULL; }
-            if (automation) { automation->Release(); automation = NULL; }
+            if (app_icon) { DestroyIcon(app_icon); app_icon = nullptr; }
+            if (automation) { automation->Release(); automation = nullptr; }
             PostQuitMessage(0);
             return 0;
+
+        default:
+            break;
         }
         return DefWindowProcW(h, msg, wParam, lParam);
     }
@@ -421,7 +427,7 @@ void start()
 {
     /* Single-instance guard.  The default kernel namespace is
        per-session, so each logged-in user can run their own copy. */
-    HANDLE instance_mutex = CreateMutexW(NULL, FALSE, APP_ID);
+    HANDLE instance_mutex = CreateMutexW(nullptr, FALSE, APP_ID);
     if (instance_mutex && GetLastError() == ERROR_ALREADY_EXISTS) {
         /* Another copy is already running.  Ask it to pop its tray
            menu, then step aside. */
@@ -439,7 +445,7 @@ void start()
     if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED)))
         ExitProcess(1);
 
-    HINSTANCE hInst = GetModuleHandleW(NULL);
+    HINSTANCE hInst = GetModuleHandleW(nullptr);
 
     WNDCLASSEXW wc;
     SecureZeroMemory(&wc, sizeof(wc));
@@ -447,16 +453,16 @@ void start()
     wc.lpfnWndProc   = app_state_t::TrayProc;
     wc.hInstance     = hInst;
     wc.lpszClassName = APP_ID;
-    wc.hCursor       = LoadCursorW(NULL, IDC_ARROW);
-    wc.hIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_APP_ICON),
+    wc.hCursor       = LoadCursorW(nullptr, IDC_ARROW);
+    wc.hIcon = reinterpret_cast<HICON>(LoadImageW(hInst, MAKEINTRESOURCEW(IDI_APP_ICON),
                                  IMAGE_ICON,
                                  GetSystemMetrics(SM_CXICON),
-                                 GetSystemMetrics(SM_CYICON), 0);
-    if (!wc.hIcon) wc.hIcon = LoadIconW(NULL, IDI_APPLICATION);
-    wc.hIconSm = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_APP_ICON),
+                                 GetSystemMetrics(SM_CYICON), 0));
+    if (!wc.hIcon) wc.hIcon = LoadIconW(nullptr, IDI_APPLICATION);
+    wc.hIconSm = reinterpret_cast<HICON>(LoadImageW(hInst, MAKEINTRESOURCEW(IDI_APP_ICON),
                                    IMAGE_ICON,
                                    GetSystemMetrics(SM_CXSMICON),
-                                   GetSystemMetrics(SM_CYSMICON), 0);
+                                   GetSystemMetrics(SM_CYSMICON), 0));
     if (!wc.hIconSm) wc.hIconSm = wc.hIcon;
     if (!RegisterClassExW(&wc))
         ExitProcess(1);
@@ -469,15 +475,15 @@ void start()
     /* Create the automation object once and keep it for the process
        lifetime.  If this fails the app still runs, just does nothing. */
     {
-        IUIAutomation *uia = NULL;
-        HRESULT hr = CoCreateInstance(kCLSID_CUIAutomation, NULL,
+        IUIAutomation *uia = nullptr;
+        HRESULT hr = CoCreateInstance(kCLSID_CUIAutomation, nullptr,
                                       CLSCTX_INPROC_SERVER,
                                       IID_PPV_ARGS(&uia));
         if (SUCCEEDED(hr)) state.automation = uia;
     }
 
     state.hwnd = CreateWindowExW(0, APP_ID, APP_TITLE, 0, 0, 0, 0, 0,
-                                 NULL, NULL, hInst, NULL);
+                                 nullptr, nullptr, hInst, nullptr);
     if (!state.hwnd)
         ExitProcess(1);
 
@@ -487,10 +493,10 @@ void start()
     state.add_tray_icon();
     state.last_layout = state.foreground_layout();
 
-    SetTimer(state.hwnd, TIMER_ID, POLL_MS, NULL);
+    SetTimer(state.hwnd, TIMER_ID, POLL_MS, nullptr);
 
     MSG msg;
-    while (GetMessageW(&msg, NULL, 0, 0) > 0) {
+    while (GetMessageW(&msg, nullptr, 0, 0) > 0) {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
