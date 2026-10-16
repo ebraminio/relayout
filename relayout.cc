@@ -27,7 +27,7 @@ static constexpr UINT MENU_AUTO = 100;
 static constexpr UINT MENU_NOW  = 101;
 static constexpr UINT MENU_EXIT = 102;
 
-static constexpr UINT POLL_MS = 100;
+static constexpr UINT POLL_MS = 200;
 
 /* ---------------- library + OS helpers ---------------- */
 
