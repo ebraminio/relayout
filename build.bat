@@ -14,7 +14,7 @@ cl relayout.cc relayout.res /FeRelayout.exe ^
     /external:anglebrackets /external:W0 ^
     /link /NODEFAULTLIB /SUBSYSTEM:WINDOWS /ENTRY:start /INCREMENTAL:NO ^
     /OPT:REF /OPT:ICF /FIXED /MERGE:.rdata=.text /ignore:4254 ^
-    kernel32.lib user32.lib shell32.lib ole32.lib oleaut32.lib
+    kernel32.lib user32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib
 if errorlevel 1 exit /b 1
 
 endlocal

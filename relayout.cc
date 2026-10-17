@@ -9,14 +9,6 @@
 #include <UIAutomation.h>
 #include "relayout.rc.h"
 
-/* The SDK declares CLSID_CUIAutomation as extern; its data would come
-   from a lib we skip under /NODEFAULTLIB.  Define our own copy. */
-static const CLSID kCLSID_CUIAutomation =
-    {0xff48dba4, 0x60ef, 0x4201,
-     {0xaa, 0x87, 0x54, 0x10, 0x3e, 0xef, 0x59, 0x4e}};
-
-/* ---------------- constants ---------------- */
-
 static constexpr LPCWSTR APP_ID    = L"Relayout";
 static constexpr LPCWSTR APP_TITLE = L"Relayout";
 
@@ -476,7 +468,7 @@ void start()
        lifetime.  If this fails the app still runs, just does nothing. */
     {
         IUIAutomation *uia = nullptr;
-        HRESULT hr = CoCreateInstance(kCLSID_CUIAutomation, nullptr,
+        HRESULT hr = CoCreateInstance(CLSID_CUIAutomation, nullptr,
                                       CLSCTX_INPROC_SERVER,
                                       IID_PPV_ARGS(&uia));
         if (SUCCEEDED(hr)) state.automation = uia;

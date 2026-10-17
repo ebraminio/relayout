@@ -45,7 +45,7 @@ COMMON=(
     -Wl,--gc-sections
 )
 
-LIBS=(-lkernel32 -luser32 -lshell32 -lole32 -loleaut32)
+LIBS=(-lkernel32 -luser32 -lshell32 -lole32 -loleaut32 -luuid)
 
 echo "==> Building Relayout.exe"
 "$WINDRES" "${MINGW_INCLUDES[@]}" relayout.rc -o relayout.res
